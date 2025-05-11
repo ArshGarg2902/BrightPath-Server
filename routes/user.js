@@ -1,15 +1,22 @@
-import express from 'express';
-import { forgotPassword,loginUser, myProfile,resetPassword, register, verifyUser } from '../controllers/user.js';
-import { isAuth } from '../midddlewares/isAuth.js';
+import express from "express";
+import {
+  forgotPassword,
+  loginUser,
+  myProfile,
+  register,
+  resetPassword,
+  verifyUser,
+} from "../controllers/user.js";
 
 import { addProgress, getYourProgress } from "../controllers/course.js";
+import isAuth from "../midddlewares/isAuth.js";  // Default import
 
 const router = express.Router();
 
 router.post("/user/register", register);
 router.post("/user/verify", verifyUser);
 router.post("/user/login", loginUser);
-router.get("/user/me", isAuth, myProfile);
+router.get("/user/me", isAuth, myProfile);  // Protected route using isAuth middleware
 router.post("/user/forgot", forgotPassword);
 router.post("/user/reset", resetPassword);
 router.post("/user/progress", isAuth, addProgress);

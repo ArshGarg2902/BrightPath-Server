@@ -1,71 +1,102 @@
 import TryCatch from "../midddlewares/TryCatch.js";
 import { Courses } from "../models/Courses.js";
 import { Lecture } from "../models/Lecture.js";
-import {rm} from "fs";
+import { rm } from "fs";
 import { promisify } from "util";
 import fs from "fs";
 import { User } from "../models/User.js";
+import { sendCourseNotificationMail } from "../midddlewares/sendMail.js";
+// export const createCourse = TryCatch(async (req, res) => {
+//   const { title, description, category, createdBy, duration, price } = req.body;
+
+//   const image = req.file;
+
+//   await Courses.create({
+//     title,
+//     description,
+//     category,
+//     createdBy,
+//     image: image?.path,
+//     duration,
+//     price,
+//   });
+
+//   res.status(201).json({
+//     message: "Course Created Successfully",
+//   });
+// });
 
 
+export const createCourse = TryCatch(async (req, res) => {
+  const { title, description, category, createdBy, duration, price } = req.body;
 
+  const image = req.file;
 
-export const createCourse=TryCatch(async(req,res)=>{
-    const {title,description,category,createdBy,duration,price }=req.body;
-
-    const image=req.file; 
-
-    await Courses.create({
-        title,
-        description,
-        category,
-        createdBy,
-        image:image?.path,
-        duration,
-        price,
-    });
-
-    res.status(201).json({
-        message:"Course Created Successfully",
-    })
-})
-
-export const addLectures = TryCatch(async (req, res) => {
-    const course = await Courses.findById(req.params.id);
-  
-    if (!course)
-      return res.status(404).json({
-        message: "No Course with this id",
-      });
-  
-    const { title, description } = req.body;
-  
-    const file = req.file;
-  
-    const lecture = await Lecture.create({
-      title,
-      description,
-      video: file?.path,
-      course: course._id,
-    });
-  
-    res.status(201).json({
-      message: "Lecture Added",
-      lecture,
-    });
+  const course = await Courses.create({
+    title,
+    description,
+    category,
+    createdBy,
+    image: image?.path,
+    duration,
+    price,
   });
 
-export const delteLecture = TryCatch(async(req,res)=>{
-  const lecture=await Lecture.findById(req.params.id);
+  // Fetch all users to notify them
+  const users = await User.find({}, "email name");
 
-  rm(lecture.video,()=>{
-    console.log("Video Deleted")
-  })
+  // Send course creation emails
+  for (const user of users) {
+    const data = {
+      name: user.name,
+      courseTitle: title,
+      courseDescription: description,
+    };
 
-  await lecture.deleteOne()
+    await sendCourseNotificationMail(user.email, "New Course Available!", data);
+  }
 
-  res.json({message:"Lecture Deleted"});
-})
+  res.status(201).json({
+    message: "Course Created Successfully and notifications sent",
+  });
+});
 
+export const addLectures = TryCatch(async (req, res) => {
+  const course = await Courses.findById(req.params.id);
+
+  if (!course)
+    return res.status(404).json({
+      message: "No Course with this id",
+    });
+
+  const { title, description } = req.body;
+
+  const file = req.file;
+
+  const lecture = await Lecture.create({
+    title,
+    description,
+    video: file?.path,
+    course: course._id,
+  });
+
+  res.status(201).json({
+    message: "Lecture Added",
+    lecture,
+  });
+});
+
+export const deleteLecture = TryCatch(async (req, res) => {
+  const lecture = await Lecture.findById(req.params.id);
+
+  rm(lecture.video, () => {
+    console.log("Video deleted");
+  });
+
+  await lecture.deleteOne();
+
+  res.json({ message: "Lecture Deleted" });
+});
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -96,7 +127,6 @@ export const deleteCourse = TryCatch(async (req, res) => {
   });
 });
 
-
 export const getAllStats = TryCatch(async (req, res) => {
   const totalCoures = (await Courses.find()).length;
   const totalLectures = (await Lecture.find()).length;
@@ -120,8 +150,6 @@ export const getAllUser = TryCatch(async (req, res) => {
 
   res.json({ users });
 });
-
-
 
 export const updateRole = TryCatch(async (req, res) => {
   if (req.user.mainrole !== "superadmin")
@@ -148,16 +176,3 @@ export const updateRole = TryCatch(async (req, res) => {
     });
   }
 });
-
-export const deleteLecture = TryCatch(async (req, res) => {
-  const lecture = await Lecture.findById(req.params.id);
-
-  rm(lecture.video, () => {
-    console.log("Video deleted");
-  });
-
-  await lecture.deleteOne();
-
-  res.json({ message: "Lecture Deleted" });
-});
-

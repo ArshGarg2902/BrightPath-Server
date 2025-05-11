@@ -67,10 +67,9 @@ const sendMail = async (email, subject, data) => {
 
 export default sendMail;
 
-export const sendForgotMail = async (subject, data) => {
+export const sendForgotMail = async (email, subject, data) => {
   const transport = createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
+    service: "Gmail", // ✅ use Gmail properly
     auth: {
       user: process.env.Gmail,
       pass: process.env.Password,
@@ -133,8 +132,7 @@ export const sendForgotMail = async (subject, data) => {
     <a href="${process.env.frontendurl}/reset-password/${data.token}" class="button">Reset Password</a>
     <p>If you did not request this, please ignore this email.</p>
     <div class="footer">
-      <p>Thank you,<br>Your Website Team</p>
-      <p><a href="https://yourwebsite.com">yourwebsite.com</a></p>
+      <p>Thank you,<br>Bright Path Team</p>
     </div>
   </div>
 </body>
@@ -143,7 +141,79 @@ export const sendForgotMail = async (subject, data) => {
 
   await transport.sendMail({
     from: process.env.Gmail,
-    to: data.email,
+    to: email, 
+    subject,
+    html,
+  });
+};
+
+
+export const sendCourseNotificationMail = async (email, subject, data) => {
+  const transport = createTransport({
+    service: "Gmail",
+    auth: {
+      user: process.env.Gmail,
+      pass: process.env.Password,
+    },
+  });
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Course Available</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      background-color: #ffffff;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+    }
+    h1 {
+      color: #333333;
+    }
+    p {
+      color: #666666;
+    }
+    .course-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #5a2d82;
+    }
+    .footer {
+      margin-top: 20px;
+      color: #999999;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>New Course Added!</h1>
+    <p>Hello ${data.name},</p>
+    <p>We have just added a new course to our platform:</p>
+    <p class="course-title">${data.courseTitle}</p>
+    <p>${data.courseDescription}</p>
+    <p>Log in to your account to explore the new content.</p>
+    <div class="footer">
+      <p>Happy Learning!<br>The Bright Path Team</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  await transport.sendMail({
+    from: process.env.Gmail,
+    to: email,
     subject,
     html,
   });
