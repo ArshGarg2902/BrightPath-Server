@@ -93,11 +93,16 @@ export const checkout = TryCatch(async (req, res) => {
     });
   }
 
-  const options = {
-    amount: Number(course.price * 100), // in paise
-    currency: "INR",
-  };
+  // const options = {
+  //   amount: Number(course.price * 100), // in paise
+  //   currency: "INR",
+  // };
 
+  const options = {
+    amount: Number(course.price * 100),
+    currency: "INR",
+    receipt: `rcpt_${Math.random().toString(36).substring(2, 10)}`,
+  };
   const order = await instance.orders.create(options);
   res.status(201).json({ order, course });
 });
@@ -413,27 +418,27 @@ export const getYourProgress = TryCatch(async (req, res) => {
 //   });
 // });
 
-import { sendCourseNotificationMail } from "../midddlewares/sendMail.js";
+// import { sendCourseNotificationMail } from "../midddlewares/sendMail.js";
 
-export const createCourse = TryCatch(async (req, res) => {
-  const { title, description, creatorId } = req.body;
+// export const createCourse = TryCatch(async (req, res) => {
+//   const { title, description, creatorId } = req.body;
 
-  const course = await Course.create({ title, description, creator: creatorId });
+//   const course = await Course.create({ title, description, creator: creatorId });
 
-  const users = await User.find({}, "email name");
+//   const users = await User.find({}, "email name");
 
-  for (const user of users) {
-    const data = {
-      name: user.name,
-      courseTitle: title,
-      courseDescription: description,
-    };
+//   for (const user of users) {
+//     const data = {
+//       name: user.name,
+//       courseTitle: title,
+//       courseDescription: description,
+//     };
 
-    await sendCourseNotificationMail(user.email, "New Course Alert!", data);
-  }
+//     await sendCourseNotificationMail(user.email, "New Course Alert!", data);
+//   }
 
-  res.status(201).json({
-    message: "Course created and email notifications sent",
-    course,
-  });
-});
+//   res.status(201).json({
+//     message: "Course created and email notifications sent",
+//     course,
+//   });
+// });
